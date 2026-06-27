@@ -795,6 +795,7 @@ pub trait LuaNativeFnMut<A: FromLuaMulti> {
 
 /// A trait for types that returns a future and can be used as Lua functions.
 #[cfg(feature = "async")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub trait LuaNativeAsyncFn<A: FromLuaMulti> {
     type Output;
 

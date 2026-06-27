@@ -490,7 +490,10 @@ pub trait UserDataMethods<T> {
     ///
     /// [`add_meta_method_mut`]: UserDataMethods::add_meta_method_mut
     #[cfg(all(feature = "async", not(any(feature = "lua51", feature = "luau"))))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
+    #[cfg_attr(
+        docsrs,
+        doc(cfg(all(feature = "async", not(any(feature = "lua51", feature = "luau")))))
+    )]
     fn add_async_meta_method_mut<M, A, MR, R>(&mut self, name: impl Into<String>, method: M)
     where
         T: 'static,
