@@ -359,7 +359,9 @@ impl Error {
     {
         match self {
             Error::ExternalError(err) => err.downcast_ref(),
-            Error::WithContext { cause, .. } => Self::downcast_ref(cause),
+            Error::BadArgument { cause, .. }
+            | Error::CallbackError { cause, .. }
+            | Error::WithContext { cause, .. } => Self::downcast_ref(cause),
             _ => None,
         }
     }
