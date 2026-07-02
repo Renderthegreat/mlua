@@ -32,6 +32,7 @@ pub use crate::state::GcGenParams as LuaGcGenParams;
 pub use crate::{
     Buffer as LuaBuffer, Vector as LuaVector,
     chunk::{CompileConstant as LuaCompileConstant, Compiler as LuaCompiler},
+    function::CoverageInfo as LuaCoverageInfo,
     luau::{
         FsRequirer as LuaFsRequirer, HeapDump as LuaHeapDump, NavigateError as LuaNavigateError,
         Require as LuaRequire,
