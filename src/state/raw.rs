@@ -659,12 +659,10 @@ impl RawLua {
 
         // Exec creation callback for non-Luau (Luau handles this via `userthread_proc`)
         #[cfg(not(feature = "luau"))]
-        if self.thread_event_triggers().on_create {
+        if self.thread_event_triggers().on_create && self.thread_event_state().is_null() {
             let extra = self.extra.get();
-            if let Some(ref cb) = (*extra).thread_event_callback
-                && XRc::strong_count(cb) == 1
-            {
-                let cb = cb.clone();
+            if let Some(cb) = (*extra).thread_event_callback.clone() {
+                let _guard = crate::thread::ThreadEventGuard::new(self, thread_state);
                 cb((*extra).lua(), crate::thread::ThreadEvent::Create(thread.clone()))?;
             }
         }
@@ -730,6 +728,16 @@ impl RawLua {
     #[inline(always)]
     pub(crate) unsafe fn thread_event_callback(&self) -> Option<ThreadEventCallback> {
         (*self.extra.get()).thread_event_callback.clone()
+    }
+
+    #[inline(always)]
+    pub(crate) unsafe fn thread_event_state(&self) -> *mut ffi::lua_State {
+        (*self.extra.get()).thread_event_state
+    }
+
+    #[inline(always)]
+    pub(crate) unsafe fn set_thread_event_state(&self, state: *mut ffi::lua_State) {
+        (*self.extra.get()).thread_event_state = state;
     }
 
     /// Pushes a primitive type value onto the Lua stack.

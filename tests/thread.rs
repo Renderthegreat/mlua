@@ -2,7 +2,7 @@ use std::panic::catch_unwind;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
-use mlua::{Error, Function, IntoLua, Lua, Result, Thread, ThreadEvent, ThreadTriggers, Value};
+use mlua::{Error, Function, IntoLua, Lua, Result, Thread, ThreadEvent, ThreadStatus, ThreadTriggers, Value};
 
 #[test]
 fn test_thread() -> Result<()> {
@@ -429,6 +429,43 @@ fn test_thread_event_yield_error() -> Result<()> {
     let thread = lua.create_thread(lua.load("coroutine.yield(1)").into_function()?)?;
     let err = thread.resume::<()>(()).unwrap_err();
     assert!(matches!(err, Error::RuntimeError(msg) if msg == "yield error"));
+
+    Ok(())
+}
+
+#[test]
+fn test_thread_event_reentrant_resume() -> Result<()> {
+    let lua = Lua::new();
+
+    // Self-resume from within the yield callback is not allowed
+    let reentered = Arc::new(AtomicBool::new(false));
+    let reentered2 = reentered.clone();
+    lua.set_thread_event_callback(ThreadTriggers::ON_YIELD, move |_lua, event| {
+        if let ThreadEvent::Yield(thread) = event
+            && !reentered2.swap(true, Ordering::Relaxed)
+        {
+            assert_eq!(thread.status(), ThreadStatus::Resumable);
+            assert!(thread.is_resumable());
+            let err = thread.resume::<Value>(()).unwrap_err();
+            assert!(
+                matches!(&err, Error::RuntimeError(msg) if msg.contains("from within its own event callback")),
+                "unexpected error: {err:?}"
+            );
+        }
+        Ok(())
+    });
+
+    let thread = lua.create_thread(
+        lua.load("coroutine.yield(1, 2, 3, 4, 5) return 7")
+            .into_function()?,
+    )?;
+
+    let vals = thread.resume::<(i32, i32, i32, i32, i32)>(())?;
+    assert_eq!(vals, (1, 2, 3, 4, 5));
+    assert!(reentered.load(Ordering::Relaxed));
+
+    assert_eq!(thread.resume::<i32>(())?, 7);
+    assert!(thread.is_finished());
 
     Ok(())
 }

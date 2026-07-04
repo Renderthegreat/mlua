@@ -889,6 +889,9 @@ impl Lua {
     /// Only one callback can be registered at a time. Calling this again replaces the previous
     /// callback and its triggers.
     ///
+    /// If the callback returns an error, it's propagated out of the operation that triggered the
+    /// event. For a [`ThreadEvent::Yield`], the yielded values are discarded.
+    ///
     /// # Example
     ///
     /// Subscribe only to yield events:
@@ -949,17 +952,18 @@ impl Lua {
         }
 
         let extra = ExtraData::get(child);
-        if !(*extra).thread_triggers.on_create {
+        if !(*extra).thread_triggers.on_create || !(*extra).thread_event_state.is_null() {
             return;
         }
         let callback = match &(*extra).thread_event_callback {
-            Some(cb) if XRc::strong_count(cb) == 1 => cb.clone(),
+            Some(cb) => cb.clone(),
             _ => return,
         };
         ffi::lua_pushthread(child);
         ffi::lua_xmove(child, (*extra).ref_thread, 1);
         let thread = Thread((*extra).raw_lua().pop_ref_thread(), child);
         callback_error_ext(parent, extra, false, move |extra, _| {
+            let _guard = crate::thread::ThreadEventGuard::new((*extra).raw_lua(), child);
             callback((*extra).lua(), ThreadEvent::Create(thread))
         })
     }

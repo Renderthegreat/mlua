@@ -87,6 +87,7 @@ pub(crate) struct ExtraData {
     pub(super) interrupt_callback: Option<crate::types::InterruptCallback>,
     pub(super) thread_triggers: ThreadTriggers,
     pub(super) thread_event_callback: Option<ThreadEventCallback>,
+    pub(super) thread_event_state: *mut ffi::lua_State,
 
     #[cfg(feature = "luau")]
     pub(crate) running_gc: bool,
@@ -192,6 +193,7 @@ impl ExtraData {
             interrupt_callback: None,
             thread_triggers: ThreadTriggers::default(),
             thread_event_callback: None,
+            thread_event_state: ptr::null_mut(),
             #[cfg(feature = "luau")]
             sandboxed: false,
             #[cfg(feature = "luau")]
