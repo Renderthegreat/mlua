@@ -168,51 +168,64 @@ fn analyze_self_and_args(sig: &Signature) -> syn::Result<MethodInfo> {
                     }
                 }
 
-                if let syn::Pat::Ident(pat_ident) = &*typed.pat {
-                    let arg_type = &*typed.ty;
-                    let mut option_inner = None;
-                    let ref_kind = match arg_type {
-                        Type::Reference(r) if r.mutability.is_some() => Some(RefKind::Mut),
-                        Type::Reference(_) => Some(RefKind::Ref),
-                        _ => {
-                            // Check if it's `Option<&T>` or `Option<&mut T>`
-                            option_inner = try_unwrap_option(arg_type);
-                            option_inner.and_then(|inner| match inner {
-                                Type::Reference(r) if r.mutability.is_some() => Some(RefKind::OptionMut),
-                                Type::Reference(_) => Some(RefKind::OptionRef),
-                                _ => None,
-                            })
-                        }
-                    };
-                    let callback_type = match &ref_kind {
-                        Some(RefKind::OptionRef | RefKind::OptionMut) => {
-                            match classify_ref_type(option_inner.unwrap()) {
-                                Some(ty) => parse_quote! { Option<#ty> },
-                                None => {
-                                    return Err(syn::Error::new_spanned(
-                                        arg_type,
-                                        "this reference type is not supported as a callback parameter",
-                                    ));
-                                }
-                            }
-                        }
-                        Some(_) => match classify_ref_type(arg_type) {
-                            Some(ty) => ty,
+                let ident = match &*typed.pat {
+                    syn::Pat::Ident(pat_ident) => pat_ident.ident.clone(),
+                    syn::Pat::Wild(_) => {
+                        // For wildcards we generate a unique identifier to avoid collisions with other
+                        // parameters.
+                        Ident::new(&format!("__mlua_arg_{}", args.len()), Span2::mixed_site())
+                    }
+                    _ => {
+                        return Err(syn::Error::new_spanned(
+                            &typed.pat,
+                            "`#[mlua::userdata_impl]` requires a named parameter or `_`; destructuring patterns are not supported",
+                        ));
+                    }
+                };
+
+                let arg_type = &*typed.ty;
+                let mut option_inner = None;
+                let ref_kind = match arg_type {
+                    Type::Reference(r) if r.mutability.is_some() => Some(RefKind::Mut),
+                    Type::Reference(_) => Some(RefKind::Ref),
+                    _ => {
+                        // Check if it's `Option<&T>` or `Option<&mut T>`
+                        option_inner = try_unwrap_option(arg_type);
+                        option_inner.and_then(|inner| match inner {
+                            Type::Reference(r) if r.mutability.is_some() => Some(RefKind::OptionMut),
+                            Type::Reference(_) => Some(RefKind::OptionRef),
+                            _ => None,
+                        })
+                    }
+                };
+                let callback_type = match &ref_kind {
+                    Some(RefKind::OptionRef | RefKind::OptionMut) => {
+                        match classify_ref_type(option_inner.unwrap()) {
+                            Some(ty) => parse_quote! { Option<#ty> },
                             None => {
                                 return Err(syn::Error::new_spanned(
                                     arg_type,
                                     "this reference type is not supported as a callback parameter",
                                 ));
                             }
-                        },
-                        None => arg_type.clone(),
-                    };
-                    args.push(ArgInfo {
-                        ident: pat_ident.ident.clone(),
-                        userdata_ref: ref_kind,
-                        callback_type,
-                    });
-                }
+                        }
+                    }
+                    Some(_) => match classify_ref_type(arg_type) {
+                        Some(ty) => ty,
+                        None => {
+                            return Err(syn::Error::new_spanned(
+                                arg_type,
+                                "this reference type is not supported as a callback parameter",
+                            ));
+                        }
+                    },
+                    None => arg_type.clone(),
+                };
+                args.push(ArgInfo {
+                    ident,
+                    userdata_ref: ref_kind,
+                    callback_type,
+                });
             }
         }
     }
@@ -274,6 +287,24 @@ pub fn userdata_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     let mut input = parse_macro_input!(item as ItemImpl);
+
+    // Generic impl blocks are not supported
+    if !input.generics.params.is_empty() {
+        return syn::Error::new_spanned(
+            &input.generics,
+            "`#[mlua::userdata_impl]` does not support generic impl blocks.",
+        )
+        .to_compile_error()
+        .into();
+    }
+    if let Some(where_clause) = &input.generics.where_clause {
+        return syn::Error::new_spanned(
+            where_clause,
+            "`#[mlua::userdata_impl]` does not support `where` clauses on the impl block.",
+        )
+        .to_compile_error()
+        .into();
+    }
 
     let type_path = match &*input.self_ty {
         Type::Path(type_path) => &type_path.path,

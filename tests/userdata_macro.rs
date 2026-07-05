@@ -528,6 +528,47 @@ fn test_param_name_hygiene() {
     .unwrap();
 }
 
+#[derive(Clone, Debug, UserData)]
+struct Wild {
+    n: i32,
+}
+
+#[mlua::userdata_impl]
+impl Wild {
+    #[lua(infallible)]
+    fn new(n: i32) -> Self {
+        Wild { n }
+    }
+
+    #[lua(infallible)]
+    fn ignore_one(&self, _: i32) -> i32 {
+        self.n
+    }
+
+    #[lua(infallible)]
+    fn add_second(&self, _: i32, other: &Wild) -> i32 {
+        self.n + other.n
+    }
+}
+
+#[test]
+fn test_wildcard_params() {
+    let lua = Lua::new();
+    lua.globals()
+        .set("Wild", lua.create_proxy::<Wild>().unwrap())
+        .unwrap();
+    lua.load(
+        r#"
+        local w = Wild.new(7)
+        assert(w:ignore_one(99) == 7, "single wildcard arg should be ignored")
+        assert(w:add_second(1, Wild.new(5)) == 12, "named arg after a wildcard should work")
+        assert(not pcall(function() return w:ignore_one({}) end), "wildcard arg is still type-checked")
+    "#,
+    )
+    .exec()
+    .unwrap();
+}
+
 #[cfg(feature = "async")]
 mod async_tests {
     use mlua::{Lua, Result, UserData};
