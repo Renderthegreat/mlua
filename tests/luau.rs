@@ -362,7 +362,7 @@ fn test_fflags() {
 #[test]
 fn test_jit_inliner() -> Result<()> {
     let lua = Lua::new();
-    lua.set_jit_options(mlua::JitOptions::new().set_inliner(true));
+    lua.set_jit_options(mlua::JitOptions::new().inliner(true));
 
     // An inlinable helper called in a hot loop.
     let sum = lua

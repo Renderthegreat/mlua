@@ -288,7 +288,7 @@ impl JitOptions {
     ///
     /// Disabled by default. Changing this option does not affect already loaded functions.
     #[must_use]
-    pub const fn set_inliner(mut self, enabled: bool) -> Self {
+    pub const fn inliner(mut self, enabled: bool) -> Self {
         self.inliner = enabled;
         self
     }
