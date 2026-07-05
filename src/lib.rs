@@ -47,8 +47,10 @@
 //!
 //! # `Send` and `Sync` support
 //!
-//! By default `mlua` is `!Send`. This can be changed by enabling `feature = "send"` that adds
-//! `Send` requirement to Rust functions and [`UserData`] types.
+//! By default `mlua` is `!Send`. This can be changed by enabling `feature = "send"` that adds a
+//! `Send` requirement to Rust functions and a `Send + Sync` requirement to [`UserData`] types.
+//! A `Send`-only userdata types must therefore be wrapped (e.g. in a `Mutex`) or created through a
+//! [`Scope`] to be used with the `send` feature.
 //!
 //! In this case [`Lua`] object and their types can be send or used from other threads. Internally
 //! access to Lua VM is synchronized using a reentrant mutex that can be locked many times within

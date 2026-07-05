@@ -70,9 +70,9 @@ pub(crate) struct LuaGuard(ArcReentrantMutexGuard<RawLua>);
 
 /// Tuning parameters for the incremental GC collector.
 ///
-/// More information can be found in the Lua [documentation].
-///
-/// [documentation]: https://www.lua.org/manual/5.5/manual.html#2.5.1
+/// Each field is an [`Option`]: `None` leaves the corresponding parameter unchanged, while
+/// `Some(v)` sets it. Units and ranges depend on the Lua version, check the Lua reference manual
+/// for details.
 #[non_exhaustive]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct GcIncParams {
@@ -90,7 +90,9 @@ pub struct GcIncParams {
     /// GC work performed per unit of memory allocated.
     pub step_multiplier: Option<c_int>,
 
-    /// Granularity of each GC step (see Lua reference for details).
+    /// Granularity of each GC step.
+    ///
+    /// The unit is version-dependent, check the Lua reference manual for details.
     #[cfg(any(feature = "lua55", feature = "lua54", feature = "luau"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "lua55", feature = "lua54", feature = "luau"))))]
     pub step_size: Option<c_int>,
@@ -134,9 +136,9 @@ impl GcIncParams {
 
 /// Tuning parameters for the generational GC collector (Lua 5.4+).
 ///
-/// More information can be found in the Lua [documentation].
-///
-/// [documentation]: https://www.lua.org/manual/5.5/manual.html#2.5.2
+/// Each field is an [`Option`]: `None` leaves the corresponding parameter unchanged, while
+/// `Some(v)` sets it. Units and ranges depend on the Lua version, check the reference manual
+/// for details.
 #[cfg(any(feature = "lua55", feature = "lua54"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "lua55", feature = "lua54"))))]
 #[non_exhaustive]
@@ -1115,6 +1117,16 @@ impl Lua {
         feature = "lua52",
         feature = "luau"
     ))]
+    #[cfg_attr(
+        docsrs,
+        doc(cfg(any(
+            feature = "lua55",
+            feature = "lua54",
+            feature = "lua53",
+            feature = "lua52",
+            feature = "luau"
+        )))
+    )]
     pub fn gc_is_running(&self) -> bool {
         let lua = self.lock();
         unsafe { ffi::lua_gc(lua.main_state(), ffi::LUA_GCISRUNNING, 0) != 0 }
@@ -1166,9 +1178,8 @@ impl Lua {
 
     /// Switches the GC to the given mode with the provided parameters.
     ///
-    /// Returns the previous [`GcMode`]. The returned value's parameter fields are always
-    /// `None` because Lua's C API does not provide a way to read back current parameter values
-    /// without changing them.
+    /// Returns the previous [`GcMode`]. Only the collector *mode* is reported, the returned value's
+    /// parameter fields are always `None`.
     ///
     /// If the collector is internally stopped, the mode cannot be changed and the requested mode is
     /// returned as-is.
@@ -1183,7 +1194,7 @@ impl Lua {
     /// Switch to incremental mode with custom parameters:
     /// ```ignore
     /// lua.gc_set_mode(GcMode::Incremental(
-    ///     GcIncParams::default().pause(200).step_multiplier(100)
+    ///     GcIncParams::default().step_multiplier(100)
     /// ));
     /// ```
     pub fn gc_set_mode(&self, mode: GcMode) -> GcMode {

@@ -54,8 +54,8 @@ The generated getter clones the field value when accessed from Lua.
 # Methods registration
 
 Use `#[mlua::userdata_impl]` on an `impl` block to register methods,
-metamethods, and constants. All public items in the block are registered
-automatically.
+metamethods, and constants. All items in the block are registered automatically,
+regardless of visibility.
 
 ## Method detection
 

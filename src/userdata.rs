@@ -326,8 +326,8 @@ pub trait UserDataMethods<T> {
     /// The userdata `T` will be moved out of the userdata container. This is useful for
     /// methods that need to consume the userdata.
     ///
-    /// The method can be called only once per userdata instance, subsequent calls will result in a
-    /// [`Error::UserDataDestructed`] error.
+    /// The method can be called only once per userdata instance. A subsequent call returns an
+    /// [`Error::BadArgument`] for `self` whose cause is [`Error::UserDataDestructed`].
     fn add_method_once<M, A, R>(&mut self, name: impl Into<String>, method: M)
     where
         T: 'static,
@@ -378,8 +378,8 @@ pub trait UserDataMethods<T> {
     /// The userdata `T` will be moved out of the userdata container. This is useful for
     /// methods that need to consume the userdata.
     ///
-    /// The method can be called only once per userdata instance, subsequent calls will result in a
-    /// [`Error::UserDataDestructed`] error.
+    /// The method can be called only once per userdata instance. A subsequent call returns an
+    /// [`Error::BadArgument`] for `self` whose cause is [`Error::UserDataDestructed`].
     #[cfg(feature = "async")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
     fn add_async_method_once<M, A, MR, R>(&mut self, name: impl Into<String>, method: M)

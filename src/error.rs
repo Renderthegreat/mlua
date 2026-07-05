@@ -352,7 +352,9 @@ impl Error {
         }
     }
 
-    /// Attempts to downcast the external error object to a concrete type by reference.
+    /// Attempts to downcast to a concrete external error type by reference.
+    ///
+    /// The search descends through wrapping layers following the same path as [`Error::chain`].
     pub fn downcast_ref<T>(&self) -> Option<&T>
     where
         T: StdError + 'static,
@@ -366,7 +368,12 @@ impl Error {
         }
     }
 
-    /// An iterator over the chain of nested errors wrapped by this Error.
+    /// An iterator over the chain of nested errors wrapped by this `Error`.
+    ///
+    /// Iteration starts with `self` and descends through wrapping layers.
+    /// A bare [`Error::ExternalError`] wrapper is skipped in favor of the error it wraps.
+    /// The chain stops at the innermost error and does not follow the external error's own
+    /// [`StdError::source`] chain.
     pub fn chain(&self) -> impl Iterator<Item = &(dyn StdError + 'static)> {
         Chain {
             root: self,

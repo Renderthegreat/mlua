@@ -68,10 +68,15 @@ use {
 #[non_exhaustive]
 pub struct ThreadTriggers {
     /// Trigger the callback when a new thread is created.
+    ///
+    /// On Luau this fires for every thread creation, on other Lua versions only for threads created
+    /// via [`Lua::create_thread`](crate::Lua::create_thread).
     pub on_create: bool,
-    /// Trigger the callback before a thread is resumed (via [`Thread::resume`]).
+    /// Trigger the callback before a thread is resumed via [`Thread::resume`] (or an async resume
+    /// driven by mlua). It does not fire for a `coroutine.resume` performed inside Lua code.
     pub on_resume: bool,
-    /// Trigger the callback after a thread yields.
+    /// Trigger the callback after a thread yields back to a [`Thread::resume`] driven by mlua.
+    /// It does not fire for a yield consumed by a `coroutine.resume` inside Lua code.
     pub on_yield: bool,
 }
 
@@ -266,7 +271,9 @@ unsafe fn exec_thread_event(
 }
 
 impl Thread {
-    /// Returns reference to the Lua state that this thread is associated with.
+    /// Returns the raw pointer to the Lua state that this thread is associated with.
+    ///
+    /// The pointer is valid only while this [`Thread`] is alive.
     #[inline(always)]
     pub fn state(&self) -> *mut ffi::lua_State {
         self.1
@@ -516,7 +523,7 @@ impl Thread {
 
     /// Sets a hook function that will periodically be called as Lua code executes.
     ///
-    /// This function is similar or [`Lua::set_hook`] except that it sets for the thread.
+    /// This function is similar to [`Lua::set_hook`] except that it sets the hook for the thread.
     /// You can have multiple hooks for different threads.
     ///
     /// To remove a hook call [`Thread::remove_hook`].

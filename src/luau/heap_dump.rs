@@ -65,7 +65,8 @@ impl HeapDump {
 
     /// Returns a mapping from object type to (count, total size in bytes).
     ///
-    /// If `category` is provided, only objects in that category are considered.
+    /// If `category` is provided, only objects in that category are considered. An unknown category
+    /// yields an empty map.
     pub fn size_by_type<'a>(&'a self, category: Option<&str>) -> HashMap<&'a str, (usize, u64)> {
         self.size_by_type_inner(category).unwrap_or_default()
     }
@@ -104,6 +105,9 @@ impl HeapDump {
     }
 
     /// Returns a mapping from userdata type to (count, total size in bytes).
+    ///
+    /// If `category` is provided, only objects in that category are considered. An unknown category
+    /// yields an empty map.
     pub fn size_by_userdata<'a>(&'a self, category: Option<&str>) -> HashMap<&'a str, (usize, u64)> {
         self.size_by_userdata_inner(category).unwrap_or_default()
     }

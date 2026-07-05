@@ -680,6 +680,8 @@ impl IntoLua for &OsStr {
         Ok(Value::String(lua.create_string(self.as_bytes())?))
     }
 
+    // On non-Unix platforms `OsStr` is not guaranteed to be valid Unicode, invalid sequences are
+    // replaced with `U+FFFD` rather than erroring.
     #[cfg(not(unix))]
     #[inline]
     fn into_lua(self, lua: &Lua) -> Result<Value> {

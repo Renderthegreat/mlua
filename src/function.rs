@@ -618,7 +618,7 @@ struct WrappedFunction(pub(crate) Callback);
 struct WrappedAsyncFunction(pub(crate) AsyncCallback);
 
 impl Function {
-    /// Wraps a Rust function or closure, returning an opaque type that implements [`IntoLua`]
+    /// Wraps a Rust function or closure, returning an opaque type that implements the [`IntoLua`]
     /// trait.
     #[inline]
     pub fn wrap<F, A, R, E>(func: F) -> impl IntoLua

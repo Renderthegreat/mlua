@@ -38,7 +38,7 @@ pub enum Value {
     LightUserData(LightUserData),
     /// An integer number.
     ///
-    /// Any Lua number convertible to a `Integer` will be represented as this variant.
+    /// Any Lua number convertible to an `Integer` will be represented as this variant.
     Integer(Integer),
     /// A floating point number.
     Number(Number),

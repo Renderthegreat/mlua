@@ -9,7 +9,7 @@
 [docs.rs]: https://docs.rs/mlua
 [Coverage Status]: https://codecov.io/gh/mlua-rs/mlua/branch/main/graph/badge.svg?token=99339FS1CG
 [codecov.io]: https://codecov.io/gh/mlua-rs/mlua
-[MSRV]: https://img.shields.io/badge/rust-1.79+-brightgreen.svg?&logo=rust
+[MSRV]: https://img.shields.io/badge/rust-1.88+-brightgreen.svg?&logo=rust
 
 [Guided Tour] | [Benchmarks] | [FAQ]
 
@@ -51,8 +51,8 @@ Below is a list of the available feature flags. By default `mlua` does not enabl
 * `vendored`: build static Lua(JIT) libraries from sources during `mlua` compilation using [lua-src] or [luajit-src]
 * `module`: enable module mode (building loadable `cdylib` library for Lua)
 * `async`: enable async/await support (any executor can be used, eg. [tokio] or [async-std])
-* `send`: make `mlua::Lua: Send + Sync` (adds [`Send`] requirement to `mlua::Function` and `mlua::UserData`)
-* `error-send`: make `mlua:Error: Send + Sync`
+* `send`: make `mlua::Lua: Send + Sync` (adds [`Send`] requirement to `mlua::Function` and `Send + Sync` to `mlua::UserData`)
+* `error-send`: make `mlua::Error: Send + Sync`
 * `serde`: add serialization and deserialization support to `mlua` types using [serde]
 * `macros`: enable procedural macros (such as `chunk!`)
 * `anyhow`: enable `anyhow::Error` conversion into Lua

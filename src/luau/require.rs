@@ -17,8 +17,11 @@ pub use fs::FsRequirer;
 /// An error that can occur during navigation in the Luau `require-by-string` system.
 #[derive(Debug, Clone)]
 pub enum NavigateError {
+    /// The path is ambiguous (more than one candidate matches).
     Ambiguous,
+    /// The requested path could not be found.
     NotFound,
+    /// Another error occurred during navigation.
     Other(Error),
 }
 
@@ -61,7 +64,7 @@ pub trait Require {
 
     /// Resets the internal state to point at an aliased module.
     ///
-    /// This function received an exact path from a configuration file.
+    /// This function receives an exact path from a configuration file.
     /// It's only called when an alias's path cannot be resolved relative to its
     /// configuration file.
     fn jump_to_alias(&mut self, path: &str) -> StdResult<(), NavigateError>;
@@ -84,7 +87,7 @@ pub trait Require {
         Err(NavigateError::NotFound)
     }
 
-    // Navigate to parent directory
+    /// Navigates to the parent directory of the current requirer.
     fn to_parent(&mut self) -> StdResult<(), NavigateError>;
 
     /// Navigate to the given child directory.
