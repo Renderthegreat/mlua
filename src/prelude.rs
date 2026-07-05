@@ -41,7 +41,7 @@ pub use crate::{
 
 #[cfg(any(feature = "luau-jit", doc))]
 #[doc(no_inline)]
-pub use crate::state::JitOptions as LuaJitOptions;
+pub use crate::state::JitOptions as LuauJitOptions;
 
 #[cfg(feature = "async")]
 #[doc(no_inline)]
