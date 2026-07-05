@@ -1170,6 +1170,9 @@ impl Lua {
     /// `None` because Lua's C API does not provide a way to read back current parameter values
     /// without changing them.
     ///
+    /// If the collector is internally stopped, the mode cannot be changed and the requested mode is
+    /// returned as-is.
+    ///
     /// # Examples
     ///
     /// Switch to generational mode (Lua 5.4+):
@@ -1200,9 +1203,8 @@ impl Lua {
                     ffi::lua_gc(state, ffi::LUA_GCPARAM, ffi::LUA_GCPSTEPSIZE, v);
                 }
                 match ffi::lua_gc(state, ffi::LUA_GCINC) {
-                    ffi::LUA_GCINC => GcMode::Incremental(GcIncParams::default()),
                     ffi::LUA_GCGEN => GcMode::Generational(GcGenParams::default()),
-                    _ => unreachable!(),
+                    _ => GcMode::Incremental(GcIncParams::default()),
                 }
             },
             #[cfg(feature = "lua54")]
@@ -1211,9 +1213,8 @@ impl Lua {
                 let step_mul = params.step_multiplier.unwrap_or(0);
                 let step_size = params.step_size.unwrap_or(0);
                 match ffi::lua_gc(state, ffi::LUA_GCINC, pause, step_mul, step_size) {
-                    ffi::LUA_GCINC => GcMode::Incremental(GcIncParams::default()),
                     ffi::LUA_GCGEN => GcMode::Generational(GcGenParams::default()),
-                    _ => unreachable!(),
+                    _ => GcMode::Incremental(GcIncParams::default()),
                 }
             },
             #[cfg(any(feature = "lua53", feature = "lua52", feature = "lua51", feature = "luajit"))]
@@ -1252,9 +1253,8 @@ impl Lua {
                     ffi::lua_gc(state, ffi::LUA_GCPARAM, ffi::LUA_GCPMAJORMINOR, v);
                 }
                 match ffi::lua_gc(state, ffi::LUA_GCGEN) {
-                    ffi::LUA_GCGEN => GcMode::Generational(GcGenParams::default()),
                     ffi::LUA_GCINC => GcMode::Incremental(GcIncParams::default()),
-                    _ => unreachable!(),
+                    _ => GcMode::Generational(GcGenParams::default()),
                 }
             },
             #[cfg(feature = "lua54")]
@@ -1262,9 +1262,8 @@ impl Lua {
                 let minor = params.minor_multiplier.unwrap_or(0);
                 let minor_to_major = params.minor_to_major.unwrap_or(0);
                 match ffi::lua_gc(state, ffi::LUA_GCGEN, minor, minor_to_major) {
-                    ffi::LUA_GCGEN => GcMode::Generational(GcGenParams::default()),
                     ffi::LUA_GCINC => GcMode::Incremental(GcIncParams::default()),
-                    _ => unreachable!(),
+                    _ => GcMode::Generational(GcGenParams::default()),
                 }
             },
         }

@@ -130,6 +130,36 @@ fn test_gc_control() -> Result<()> {
     Ok(())
 }
 
+#[cfg(any(feature = "lua54", feature = "lua55"))]
+#[test]
+fn test_gc_set_mode_in_finalizer() -> Result<()> {
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    let lua = Lua::new();
+
+    // While finalizers are running, the GC is internally stopped and `lua_gc` rejects all
+    // options
+    let switched = Arc::new(AtomicBool::new(false));
+    let switched2 = switched.clone();
+    let finalizer = lua.create_function(move |lua, ()| {
+        let mode = lua.gc_set_mode(GcMode::Generational(GcGenParams::default()));
+        switched2.store(matches!(mode, GcMode::Generational(_)), Ordering::Relaxed);
+        Ok(())
+    })?;
+    lua.globals().set("finalizer", finalizer)?;
+    lua.load("setmetatable({}, { __gc = finalizer })").exec()?;
+    lua.globals().remove("finalizer")?;
+
+    lua.gc_collect()?;
+    lua.gc_collect()?;
+    assert!(
+        switched.load(Ordering::Relaxed),
+        "gc_set_mode did not complete in finalizer"
+    );
+
+    Ok(())
+}
+
 #[cfg(any(feature = "lua53", feature = "lua52"))]
 #[test]
 fn test_gc_error() {
