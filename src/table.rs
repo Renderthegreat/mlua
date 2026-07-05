@@ -341,6 +341,54 @@ impl Table {
         }
     }
 
+    /// Removes a key from the table.
+    ///
+    /// If `key` is an integer, mlua shifts down the elements from `table[key+1]`,
+    /// and erases element `table[key]`. The complexity is `O(n)` in the worst case,
+    /// where `n` is the table length.
+    ///
+    /// For other key types this is equivalent to setting `table[key] = nil`.
+    ///
+    /// This might invoke the `__len`, `__index` and `__newindex` metamethods.
+    /// Use the [`raw_remove`] method if that is not desired.
+    ///
+    /// [`raw_remove`]: Table::raw_remove
+    pub fn remove(&self, key: impl IntoLua) -> Result<()> {
+        // Fast track (skip protected call)
+        if !self.has_metatable() {
+            return self.raw_remove(key);
+        }
+
+        let lua = self.0.lua.lock();
+        let key = key.into_lua(lua.lua())?;
+        match key {
+            Value::Integer(idx) => {
+                let size = self.len()?;
+                if idx < 1 || idx > size {
+                    return Err(Error::runtime("index out of bounds"));
+                }
+
+                let state = lua.state();
+                unsafe {
+                    let _sg = StackGuard::new(state);
+                    check_stack(state, 4)?;
+
+                    lua.push_ref(&self.0);
+                    protect_lua!(state, 1, 0, |state| {
+                        for i in idx..size {
+                            // table[i] = table[i+1]
+                            ffi::lua_geti(state, -1, i + 1);
+                            ffi::lua_seti(state, -2, i);
+                        }
+                        ffi::lua_pushnil(state);
+                        ffi::lua_seti(state, -2, size);
+                    })
+                }
+            }
+            _ => self.set(key, Nil),
+        }
+    }
+
     /// Compares two tables for equality.
     ///
     /// Tables are compared by reference first.
