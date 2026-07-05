@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
+use proc_macro2::{Span as Span2, TokenStream as TokenStream2};
 use quote::{format_ident, quote};
 use syn::spanned::Spanned;
 use syn::{
@@ -535,14 +535,16 @@ fn gen_arg_token(arg: &ArgInfo) -> TokenStream2 {
 /// Generate call arguments for invoking the original method.
 fn gen_call_args(info: &MethodInfo) -> TokenStream2 {
     let mut call_args: Vec<TokenStream2> = Vec::new();
+    let this = Ident::new("this", Span2::mixed_site());
+    let lua = Ident::new("lua", Span2::mixed_site());
 
     match info.self_kind {
         SelfKind::None => {}
-        _ => call_args.push(quote! { this }),
+        _ => call_args.push(quote! { #this }),
     }
 
     if info.lua.is_some() {
-        call_args.push(quote! { lua });
+        call_args.push(quote! { #lua });
     }
 
     for arg in &info.args {
@@ -555,17 +557,19 @@ fn gen_call_args(info: &MethodInfo) -> TokenStream2 {
 /// Generate call arguments for invoking the original async method.
 fn gen_async_call_args(info: &MethodInfo) -> TokenStream2 {
     let mut call_args: Vec<TokenStream2> = Vec::new();
+    let this = Ident::new("this", Span2::mixed_site());
+    let lua = Ident::new("lua", Span2::mixed_site());
 
     match info.self_kind {
         SelfKind::None => {}
-        SelfKind::Ref(RefKind::Mut | RefKind::OptionMut) => call_args.push(quote! { &mut this }),
-        SelfKind::Ref(_) => call_args.push(quote! { &this }),
-        SelfKind::Owned => call_args.push(quote! { this }),
+        SelfKind::Ref(RefKind::Mut | RefKind::OptionMut) => call_args.push(quote! { &mut #this }),
+        SelfKind::Ref(_) => call_args.push(quote! { &#this }),
+        SelfKind::Owned => call_args.push(quote! { #this }),
     }
 
     match info.lua {
-        Some(LuaArg::Ref) => call_args.push(quote! { &lua }),
-        Some(LuaArg::Owned) => call_args.push(quote! { lua }),
+        Some(LuaArg::Ref) => call_args.push(quote! { &#lua }),
+        Some(LuaArg::Owned) => call_args.push(quote! { #lua }),
         None => {}
     }
 
@@ -579,19 +583,25 @@ fn gen_async_call_args(info: &MethodInfo) -> TokenStream2 {
 /// Generate the closure params for the registration callback.
 fn gen_closure_params(info: &MethodInfo) -> TokenStream2 {
     let destructure = gen_closure_destructure(info);
+    let this = Ident::new("this", Span2::mixed_site());
+    let lua = Ident::new("lua", Span2::mixed_site());
+
     match info.self_kind {
-        SelfKind::None => quote! { |lua, #destructure| },
-        _ => quote! { |lua, this, #destructure| },
+        SelfKind::None => quote! { |#lua, #destructure| },
+        _ => quote! { |#lua, #this, #destructure| },
     }
 }
 
 /// Generate the closure params for an async registration callback.
 fn gen_async_closure_params(info: &MethodInfo) -> TokenStream2 {
     let destructure = gen_closure_destructure(info);
+    let this = Ident::new("this", Span2::mixed_site());
+    let lua = Ident::new("lua", Span2::mixed_site());
+
     match info.self_kind {
-        SelfKind::None => quote! { |lua, #destructure| },
-        SelfKind::Ref(RefKind::Mut) => quote! { |lua, mut this, #destructure| },
-        _ => quote! { |lua, this, #destructure| },
+        SelfKind::None => quote! { |#lua, #destructure| },
+        SelfKind::Ref(RefKind::Mut) => quote! { |#lua, mut #this, #destructure| },
+        _ => quote! { |#lua, #this, #destructure| },
     }
 }
 
@@ -603,19 +613,21 @@ fn gen_field_getter(
 ) -> TokenStream2 {
     let lua_name = lua_attr.name(fn_name);
     let call_args = gen_call_args(info);
+    let this = Ident::new("this", Span2::mixed_site());
+    let lua = Ident::new("lua", Span2::mixed_site());
 
     if lua_attr.infallible {
         return quote! {
-            registry.add_field_method_get(#lua_name, |lua, this| {
-                let _ = lua; // silence unused variable warning
+            registry.add_field_method_get(#lua_name, |#lua, #this| {
+                let _ = #lua; // silence unused variable warning
                 Ok(#type_path::#fn_name(#call_args))
             });
         };
     }
 
     quote! {
-        registry.add_field_method_get(#lua_name, |lua, this| {
-            let _ = lua; // silence unused variable warning
+        registry.add_field_method_get(#lua_name, |#lua, #this| {
+            let _ = #lua; // silence unused variable warning
             #type_path::#fn_name(#call_args)
         });
     }
@@ -629,12 +641,14 @@ fn gen_field_setter(
 ) -> TokenStream2 {
     let lua_name = lua_attr.name(fn_name);
     let call_args = gen_call_args(info);
+    let this = Ident::new("this", Span2::mixed_site());
+    let lua = Ident::new("lua", Span2::mixed_site());
 
     if lua_attr.infallible {
         let val_ident = info.args.first().map(|a| &a.ident);
         return quote! {
-            registry.add_field_method_set(#lua_name, |lua, this, #val_ident| {
-                let _ = lua; // silence unused variable warning
+            registry.add_field_method_set(#lua_name, |#lua, #this, #val_ident| {
+                let _ = #lua; // silence unused variable warning
                 Ok(#type_path::#fn_name(#call_args))
             });
         };
@@ -642,8 +656,8 @@ fn gen_field_setter(
 
     let val_ident = info.args.first().map(|a| &a.ident);
     quote! {
-        registry.add_field_method_set(#lua_name, |lua, this, #val_ident| {
-            let _ = lua; // silence unused variable warning
+        registry.add_field_method_set(#lua_name, |#lua, #this, #val_ident| {
+            let _ = #lua; // silence unused variable warning
             #type_path::#fn_name(#call_args)
         });
     }

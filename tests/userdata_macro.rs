@@ -471,6 +471,48 @@ fn test_static_metamethods() {
     .unwrap();
 }
 
+#[derive(Clone, Debug, UserData)]
+struct Hygiene {
+    value: i32,
+}
+
+#[mlua::userdata_impl]
+impl Hygiene {
+    #[lua(infallible)]
+    fn new(value: i32) -> Self {
+        Hygiene { value }
+    }
+
+    // `this` must not clash with the generated receiver binding.
+    #[lua(infallible)]
+    fn add_this(&self, this: i32) -> i32 {
+        self.value + this
+    }
+
+    // `lua` must not clash either.
+    #[lua(infallible)]
+    fn add_lua(&self, lua: i32) -> i32 {
+        self.value + lua
+    }
+}
+
+#[test]
+fn test_param_name_hygiene() {
+    let lua = Lua::new();
+    lua.globals()
+        .set("Hygiene", lua.create_proxy::<Hygiene>().unwrap())
+        .unwrap();
+    lua.load(
+        r#"
+        local h = Hygiene.new(10)
+        assert(h:add_this(5) == 15, "add_this should be 10 + 5 = 15")
+        assert(h:add_lua(3) == 13, "add_lua should be 10 + 3 = 13")
+    "#,
+    )
+    .exec()
+    .unwrap();
+}
+
 #[cfg(feature = "async")]
 mod async_tests {
     use mlua::{Lua, Result, UserData};
@@ -507,6 +549,10 @@ mod async_tests {
             Ok(self.0 * factor)
         }
 
+        async fn add(&self, this: u64, lua: u64) -> Result<u64> {
+            Ok(self.0 + this + lua)
+        }
+
         async fn default_value() -> Result<u64> {
             Ok(42)
         }
@@ -541,6 +587,8 @@ mod async_tests {
             assert(val == 10, "expected 10, got " .. tostring(val))
             local doubled = c:multiply(3)
             assert(doubled == 30, "expected 30, got " .. tostring(doubled))
+            local summed = c:add(1, 2)
+            assert(summed == 13, "expected 10 + 1 + 2 = 13, got " .. tostring(summed))
             local inf = c:get_value_infallible()
             assert(inf == 10, "expected infallible 10, got " .. tostring(inf))
         "#,
