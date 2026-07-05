@@ -16,6 +16,7 @@ pub use fs::FsRequirer;
 
 /// An error that can occur during navigation in the Luau `require-by-string` system.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum NavigateError {
     /// The path is ambiguous (more than one candidate matches).
     Ambiguous,
