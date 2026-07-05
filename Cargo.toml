@@ -85,7 +85,7 @@ rustyline = "18.0"
 tokio = { version = "1.0", features = ["full"] }
 
 [lints.rust]
-unexpected_cfgs = { level = "allow", check-cfg = ['cfg(tarpaulin_include)'] }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)', 'cfg(force_memory_limit)'] }
 
 [[bench]]
 name = "benchmark"
