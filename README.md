@@ -17,8 +17,6 @@
 [Benchmarks]: https://github.com/khvzak/script-bench-rs
 [FAQ]: FAQ.md
 
-## The main branch is the development version of `mlua`. Please see the [v0.11](https://github.com/mlua-rs/mlua/tree/v0.11) branch for the stable versions of `mlua`.
-
 `mlua` is a set of bindings to the [Lua](https://www.lua.org) programming language for Rust with a goal of providing a
 _safe_ (as much as possible), high level, easy to use, practical and flexible API.
 
@@ -133,7 +131,7 @@ Add to `Cargo.toml`:
 
 ``` toml
 [dependencies]
-mlua = { version = "0.11", features = ["lua54", "vendored"] }
+mlua = { version = "0.12", features = ["lua54", "vendored"] }
 ```
 
 `main.rs`
@@ -168,7 +166,7 @@ Add to `Cargo.toml`:
 crate-type = ["cdylib"]
 
 [dependencies]
-mlua = { version = "0.11", features = ["lua54", "module"] }
+mlua = { version = "0.12", features = ["lua54", "module"] }
 ```
 
 `lib.rs`:
