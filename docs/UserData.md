@@ -115,7 +115,29 @@ impl MyType {
     fn __add(&self, other: &Self) -> Self { ... }
 
     #[lua(meta, name = "__call", infallible)]
-    fn construct(lua: &Lua, value: u32) -> Self { ... }
+    fn construct(this: mlua::AnyUserData, value: u32) -> Self { ... }
+}
+```
+
+A metamethod with a `self` receiver is registered via `add_meta_method`
+and behaves like a regular method. A metamethod without a receiver is
+registered via `add_meta_function` and receives exactly the values Lua passes.
+Declare every argument Lua provides, in order:
+
+- Binary metamethods (`__add`, `__sub`, `__eq`, `__concat`, ...) receive both
+  operands, so both must be declared. This is also the way to support reversed
+  operands (e.g. `2 + obj`), where the userdata is the second argument.
+- Method-style metamethods (`__call`, `__index`, `__newindex`, ...) receive the
+  object as their first argument. When registered without a `self` receiver
+  (for example a constructor invoked as `MyType(value)`), declare that leading
+  argument explicitly (typically `mlua::AnyUserData`), even if it is ignored.
+
+```rust,ignore
+#[mlua::userdata_impl]
+impl Vec2 {
+    // No receiver: both operands are declared and passed directly by Lua.
+    #[lua(meta, infallible, name = "__add")]
+    fn add(a: &Vec2, b: &Vec2) -> Vec2 { ... }
 }
 ```
 

@@ -1,6 +1,6 @@
 #![cfg(feature = "macros")]
 
-use mlua::{Lua, Result, UserData};
+use mlua::{AnyUserData, Lua, Result, UserData};
 
 #[derive(Default, Clone, Debug, UserData)]
 struct Rectangle {
@@ -410,6 +410,65 @@ fn test_known_borrow_wrappers() -> Result<()> {
     .exec()
     .unwrap();
     Ok(())
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, UserData)]
+struct Vec2 {
+    x: i32,
+    y: i32,
+}
+
+#[mlua::userdata_impl]
+impl Vec2 {
+    #[lua(infallible)]
+    fn new(x: i32, y: i32) -> Self {
+        Vec2 { x, y }
+    }
+
+    #[lua(meta, infallible, name = "__add")]
+    fn add(this: &Vec2, other: &Vec2) -> Vec2 {
+        Vec2 {
+            x: this.x + other.x,
+            y: this.y + other.y,
+        }
+    }
+
+    #[lua(meta, infallible, name = "__eq")]
+    fn eq(this: &Vec2, other: &Vec2) -> bool {
+        this == other
+    }
+
+    #[lua(meta, infallible, name = "__call")]
+    fn call(_lua: &Lua, _proxy: AnyUserData, x: i32, y: i32) -> Vec2 {
+        Self::new(x, y)
+    }
+}
+
+#[test]
+fn test_static_metamethods() {
+    let lua = Lua::new();
+    lua.globals()
+        .set("Vec2", lua.create_proxy::<Vec2>().unwrap())
+        .unwrap();
+    lua.load(
+        r#"
+        local a = Vec2.new(1, 2)
+        local b = Vec2.new(3, 4)
+
+        local c = a + b
+        assert(c.x == 4, "__add x should be 1 + 3 = 4, got " .. tostring(c.x))
+        assert(c.y == 6, "__add y should be 2 + 4 = 6, got " .. tostring(c.y))
+
+        assert(a == Vec2.new(1, 2), "__eq should report vectors equal")
+        assert(a ~= b, "__eq should report vectors unequal")
+
+        -- `__call` on the proxy
+        local d = Vec2(7, 14)
+        assert(d.x == 7 and d.y == 14, "__call should build Vec2(7, 14)")
+    "#,
+    )
+    .exec()
+    .unwrap();
 }
 
 #[cfg(feature = "async")]

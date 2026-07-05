@@ -654,18 +654,7 @@ fn gen_meta(type_path: &syn::Path, fn_name: &Ident, lua_attr: &LuaAttr, info: &M
         Ok(name) => name,
         Err(err) => return err.to_compile_error(),
     };
-    let closure_params = if matches!(info.self_kind, SelfKind::None) {
-        // Lua always passes `self` to the stack arg, just ignore it.
-        if info.args.is_empty() {
-            quote! { |lua, _this: ::mlua::AnyUserData| }
-        } else {
-            let idents: Vec<_> = info.args.iter().map(|a| &a.ident).collect();
-            let types: Vec<_> = info.args.iter().map(|a| &a.callback_type).collect();
-            quote! { |lua, (_this, #(#idents),*): (::mlua::AnyUserData, #(#types),*) | }
-        }
-    } else {
-        gen_closure_params(info)
-    };
+    let closure_params = gen_closure_params(info);
     let call_args = gen_call_args(info);
     let fn_path = quote! { #type_path::#fn_name };
 
@@ -761,17 +750,7 @@ fn gen_async_meta(
         Ok(name) => name,
         Err(err) => return err.to_compile_error(),
     };
-    let closure_params = if matches!(info.self_kind, SelfKind::None) {
-        if info.args.is_empty() {
-            quote! { |lua, _this: ::mlua::AnyUserData| }
-        } else {
-            let idents: Vec<_> = info.args.iter().map(|a| &a.ident).collect();
-            let types: Vec<_> = info.args.iter().map(|a| &a.callback_type).collect();
-            quote! { |lua, (_this, #(#idents),*): (::mlua::AnyUserData, #(#types),*) | }
-        }
-    } else {
-        gen_async_closure_params(info)
-    };
+    let closure_params = gen_async_closure_params(info);
     let call_args = gen_async_call_args(info);
     let fn_path = quote! { #type_path::#fn_name };
 
