@@ -1,3 +1,17 @@
+## v0.12.0 (Jul 05, 2026)
+
+Changes since v0.12.0-rc.2
+
+- Create root re-exports are refactored (only essentials are re-exported, the rest is in the new submodules)
+- Added `ThreadStatus::Normal` and `Thread::is_normal` (mimic `coroutine.status`)
+- Added `Lua::set_jit_options` with support of Luau JIT inliner (Luau)
+- Added `Value::as_vector`/`Value::is_vector` (Luau)
+- Added `Table::remove`
+- `serde`: tables with the array metatable are always encoded as arrays (incl. `detect_mixed_tables` option)
+- impl `Hash` for `BorrowedStr`/`BorrowedBytes`
+- `Lua::current_thread` resolves implicit async threads to their root owner (#706)
+- Bugfixes and improvements
+
 ## v0.12.0-rc.2 (Jun 06, 2026)
 
 - Add `#[derive(UserData)]` and `#[mlua::userdata_impl]` macros
