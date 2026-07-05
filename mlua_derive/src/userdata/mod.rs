@@ -3,6 +3,7 @@ pub(crate) mod userdata_impl;
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
+use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::{Attribute, Data, DeriveInput, Error, Fields, FieldsNamed, Meta, parse_macro_input};
 
@@ -103,7 +104,7 @@ pub fn userdata_type(item: TokenStream) -> TokenStream {
                 continue;
             }
 
-            let lua_name = lua_attr.name.unwrap_or_else(|| field_name.to_string());
+            let lua_name = lua_attr.name.unwrap_or_else(|| field_name.unraw().to_string());
 
             // Assume get/set by default (unless explicitly specified)
             let (has_get, has_set) = if lua_attr.get || lua_attr.set {

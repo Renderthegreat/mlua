@@ -1,5 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::ext::IdentExt;
 use syn::{DeriveInput, parse_macro_input, parse_quote};
 
 pub fn from_lua(input: TokenStream) -> TokenStream {
@@ -7,7 +8,7 @@ pub fn from_lua(input: TokenStream) -> TokenStream {
         ident, mut generics, ..
     } = parse_macro_input!(input as DeriveInput);
 
-    let ident_str = ident.to_string();
+    let ident_str = ident.unraw().to_string();
     generics
         .make_where_clause()
         .predicates

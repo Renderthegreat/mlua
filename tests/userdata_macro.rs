@@ -474,13 +474,14 @@ fn test_static_metamethods() {
 #[derive(Clone, Debug, UserData)]
 struct Hygiene {
     value: i32,
+    r#type: i32,
 }
 
 #[mlua::userdata_impl]
 impl Hygiene {
     #[lua(infallible)]
     fn new(value: i32) -> Self {
-        Hygiene { value }
+        Hygiene { value, r#type: 7 }
     }
 
     // `this` must not clash with the generated receiver binding.
@@ -494,6 +495,11 @@ impl Hygiene {
     fn add_lua(&self, lua: i32) -> i32 {
         self.value + lua
     }
+
+    #[lua(infallible)]
+    fn r#double_type(&self) -> i32 {
+        self.r#type * 2
+    }
 }
 
 #[test]
@@ -505,8 +511,17 @@ fn test_param_name_hygiene() {
     lua.load(
         r#"
         local h = Hygiene.new(10)
+
+        -- reserved parameter names must not clash with generated bindings
         assert(h:add_this(5) == 15, "add_this should be 10 + 5 = 15")
         assert(h:add_lua(3) == 13, "add_lua should be 10 + 3 = 13")
+
+        -- the `r#` prefix must not leak into Lua names
+        assert(h.type == 7, "field r#type should be exposed as 'type'")
+        h.type = 10
+        assert(h.type == 10, "field r#type setter should update via 'type'")
+        assert(h:double_type() == 20, "method r#double_type should be callable as 'double_type'")
+        assert(h["r#type"] == nil, "the raw prefix must not leak into the Lua name")
     "#,
     )
     .exec()
