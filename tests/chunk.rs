@@ -1,7 +1,8 @@
 #[cfg(not(target_os = "wasi"))]
 use std::{fs, io};
 
-use mlua::{Chunk, ChunkMode, Lua, Result};
+use mlua::chunk::{Chunk, ChunkMode};
+use mlua::{Lua, Result};
 
 #[test]
 fn test_chunk_methods() -> Result<()> {
@@ -131,7 +132,7 @@ fn test_chunk_macro() -> Result<()> {
 #[cfg(feature = "luau")]
 #[test]
 fn test_compiler() -> Result<()> {
-    let compiler = mlua::Compiler::new()
+    let compiler = mlua::chunk::Compiler::new()
         .set_optimization_level(2)
         .set_debug_level(2)
         .set_type_info_level(1)
@@ -158,7 +159,8 @@ fn test_compiler() -> Result<()> {
 #[cfg(feature = "luau")]
 #[test]
 fn test_compiler_library_constants() {
-    use mlua::{Compiler, Vector};
+    use mlua::Vector;
+    use mlua::chunk::Compiler;
 
     let compiler = Compiler::new()
         .set_optimization_level(2)

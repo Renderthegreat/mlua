@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use std::error::Error as StdError;
 
 use bstr::BString;
+use mlua::serde::{DeserializeOptions, SerializeOptions};
 use mlua::{
-    AnyUserData, DeserializeOptions, Error, ExternalResult, IntoLua, Lua, LuaSerdeExt, Result as LuaResult,
-    SerializeOptions, UserData, Value,
+    AnyUserData, Error, ExternalResult, IntoLua, Lua, LuaSerdeExt, Result as LuaResult, UserData, Value,
 };
 use serde::{Deserialize, Serialize};
 

@@ -239,7 +239,7 @@ fn test_function_dump() -> Result<()> {
 fn test_function_coverage() -> Result<()> {
     let lua = Lua::new();
 
-    lua.set_compiler(mlua::Compiler::default().set_coverage_level(1));
+    lua.set_compiler(mlua::chunk::Compiler::default().set_coverage_level(1));
 
     let f = lua
         .load(

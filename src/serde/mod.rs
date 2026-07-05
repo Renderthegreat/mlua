@@ -101,7 +101,8 @@ pub trait LuaSerdeExt: Sealed {
     /// # Example
     ///
     /// ```
-    /// use mlua::{Lua, Result, LuaSerdeExt, SerializeOptions};
+    /// use mlua::serde::SerializeOptions;
+    /// use mlua::{Lua, Result, LuaSerdeExt};
     ///
     /// fn main() -> Result<()> {
     ///     let lua = Lua::new();
@@ -151,7 +152,8 @@ pub trait LuaSerdeExt: Sealed {
     /// # Example
     ///
     /// ```
-    /// use mlua::{Lua, Result, LuaSerdeExt, DeserializeOptions};
+    /// use mlua::serde::DeserializeOptions;
+    /// use mlua::{Lua, Result, LuaSerdeExt};
     /// use serde::Deserialize;
     ///
     /// #[derive(Deserialize, Debug, PartialEq)]

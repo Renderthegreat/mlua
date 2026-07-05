@@ -2,7 +2,8 @@ use std::panic::catch_unwind;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
-use mlua::{Error, Function, IntoLua, Lua, Result, Thread, ThreadEvent, ThreadStatus, ThreadTriggers, Value};
+use mlua::thread::{ThreadEvent, ThreadStatus, ThreadTriggers};
+use mlua::{Error, Function, IntoLua, Lua, Result, Thread, Value};
 
 #[test]
 fn test_thread() -> Result<()> {

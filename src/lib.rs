@@ -57,8 +57,8 @@
 //! the same thread.
 //!
 //! [Lua programming language]: https://www.lua.org/
-//! [executing]: crate::Chunk::exec
-//! [evaluating]: crate::Chunk::eval
+//! [executing]: crate::chunk::Chunk::exec
+//! [evaluating]: crate::chunk::Chunk::eval
 //! [globals]: crate::Lua::globals
 //! [`Future`]: std::future::Future
 //! [`serde::Serialize`]: https://docs.serde.rs/serde/ser/trait.Serialize.html
@@ -108,6 +108,7 @@ pub use inventory as __inventory;
 
 #[doc(inline)]
 pub use crate::error::{Error, Result};
+pub use crate::error::{ErrorContext, ExternalError, ExternalResult};
 #[doc(inline)]
 pub use crate::function::Function;
 pub use crate::multi::{MultiValue, Variadic};
@@ -116,7 +117,8 @@ pub use crate::scope::Scope;
 pub use crate::state::{Lua, LuaOptions, WeakLua};
 pub use crate::stdlib::StdLib;
 #[doc(inline)]
-pub use crate::string::{BorrowedBytes, BorrowedStr, LuaString};
+pub use crate::string::LuaString;
+pub use crate::string::{BorrowedBytes, BorrowedStr};
 #[doc(inline)]
 pub use crate::table::Table;
 #[doc(inline)]
@@ -128,43 +130,24 @@ pub use crate::types::{
     VmState,
 };
 #[doc(inline)]
-pub use crate::userdata::AnyUserData;
+pub use crate::userdata::{AnyUserData, UserData};
+pub use crate::userdata::{
+    MetaMethod, UserDataFields, UserDataMethods, UserDataOwned, UserDataRef, UserDataRefMut, UserDataRegistry,
+};
 pub use crate::value::{Nil, Value};
 
-// Re-export some types to keep backward compatibility and avoid breaking changes in the public API.
+/// Deprecated alias to [`LuaString`].
+#[deprecated(since = "0.12.0", note = "use `mlua::LuaString` instead")]
 #[doc(hidden)]
-pub use crate::chunk::{AsChunk, Chunk, ChunkMode};
-#[cfg(feature = "luau")]
-#[doc(hidden)]
-pub use crate::chunk::{CompileConstant, Compiler};
-#[doc(hidden)]
-pub use crate::error::{ErrorContext, ExternalError, ExternalResult};
-#[doc(hidden)]
-pub use crate::string::LuaString as String;
-#[doc(hidden)]
-pub use crate::table::{TablePairs, TableSequence};
-#[doc(hidden)]
-pub use crate::thread::{ThreadEvent, ThreadStatus, ThreadTriggers};
-#[doc(hidden)]
-pub use crate::userdata::{
-    MetaMethod, UserData, UserDataFields, UserDataMetatable, UserDataMethods, UserDataOwned, UserDataRef,
-    UserDataRefMut, UserDataRegistry,
-};
+pub type String = crate::string::LuaString;
 
 #[cfg(not(feature = "luau"))]
-#[doc(inline)]
 pub use crate::debug::HookTriggers;
 
-#[cfg(any(feature = "luau-jit", doc))]
-#[doc(inline)]
-pub use crate::state::JitOptions;
 #[cfg(any(feature = "luau", doc))]
 #[cfg_attr(docsrs, doc(cfg(feature = "luau")))]
 pub use crate::{buffer::Buffer, vector::Vector};
 
-#[cfg(feature = "serde")]
-#[doc(hidden)]
-pub use crate::serde::{DeserializeOptions, SerializeOptions};
 #[cfg(feature = "serde")]
 #[doc(inline)]
 pub use crate::{serde::LuaSerdeExt, value::SerializableValue};
@@ -196,7 +179,9 @@ pub use mlua_derive::FromLua;
 #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
 pub use mlua_derive::UserData;
 
-#[doc(hidden)]
+/// Registers items in an `impl` block as methods/fields of a [`UserData`](trait@UserData) type.
+///
+/// See the [`UserData`](derive@UserData) derive macro documentation for usage details.
 #[cfg(feature = "macros")]
 #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
 pub use mlua_derive::userdata_impl;

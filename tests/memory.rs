@@ -148,7 +148,7 @@ fn test_gc_set_mode_in_finalizer() -> Result<()> {
     })?;
     lua.globals().set("finalizer", finalizer)?;
     lua.load("setmetatable({}, { __gc = finalizer })").exec()?;
-    lua.globals().remove("finalizer")?;
+    lua.globals().raw_remove("finalizer")?;
 
     lua.gc_collect()?;
     lua.gc_collect()?;

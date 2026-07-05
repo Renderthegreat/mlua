@@ -109,7 +109,8 @@ impl Chunk {
         });
 
         quote! {{
-            use mlua::{AsChunk, ChunkMode, Lua, Result, Table};
+            use mlua::chunk::{AsChunk, ChunkMode};
+            use mlua::{Lua, Result, Table};
             use ::std::borrow::Cow;
             use ::std::cell::Cell;
             use ::std::io::Result as IoResult;

@@ -4,9 +4,8 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use mlua::{
-    Compiler, Error, Function, Lua, LuaOptions, ObjectLike, Result, StdLib, Table, Value, Vector, VmState,
-};
+use mlua::chunk::Compiler;
+use mlua::{Error, Function, Lua, LuaOptions, ObjectLike, Result, StdLib, Table, Value, Vector, VmState};
 
 #[test]
 fn test_version() -> Result<()> {
@@ -362,7 +361,7 @@ fn test_fflags() {
 #[test]
 fn test_jit_inliner() -> Result<()> {
     let lua = Lua::new();
-    lua.set_jit_options(mlua::JitOptions::new().inliner(true));
+    lua.set_jit_options(mlua::state::JitOptions::new().inliner(true));
 
     // An inlinable helper called in a hot loop.
     let sum = lua

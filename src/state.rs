@@ -804,7 +804,8 @@ impl Lua {
     ///
     /// ```
     /// # use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
-    /// # use mlua::{Lua, Result, ThreadStatus, VmState};
+    /// # use mlua::thread::ThreadStatus;
+    /// # use mlua::{Lua, Result, VmState};
     /// # #[cfg(feature = "luau")]
     /// # fn main() -> Result<()> {
     /// let lua = Lua::new();
@@ -899,7 +900,8 @@ impl Lua {
     /// Subscribe only to yield events:
     ///
     /// ```
-    /// # use mlua::{Lua, Result, ThreadTriggers, ThreadEvent};
+    /// # use mlua::thread::{ThreadTriggers, ThreadEvent};
+    /// # use mlua::{Lua, Result};
     /// # fn main() -> Result<()> {
     /// let lua = Lua::new();
     /// lua.set_thread_event_callback(
@@ -1342,7 +1344,7 @@ impl Lua {
     /// similar on the returned builder. Code is not even parsed until one of these methods is
     /// called.
     ///
-    /// [`Chunk::exec`]: crate::Chunk::exec
+    /// [`Chunk::exec`]: crate::chunk::Chunk::exec
     #[track_caller]
     pub fn load<'a>(&self, chunk: impl AsChunk + 'a) -> Chunk<'a> {
         self.load_with_location(chunk, Location::caller())
