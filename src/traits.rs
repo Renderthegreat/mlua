@@ -257,7 +257,7 @@ pub trait HasValueRef: Sized {
 }
 
 pub trait MaybeHasValueRef: Sized {
-    /// Convert compatiable types to a [`ValueRef`].
+    /// Convert compatible types to a [`ValueRef`].
     fn maybe_to_vref(&self) -> Option<&ValueRef>;
 }
 
