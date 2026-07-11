@@ -1227,8 +1227,8 @@ impl ObjectLike for Table {
 }
 
 impl HasValueRef for Table {
-    fn to_vref(&self) -> ValueRef {
-        self.0
+    fn to_vref(&self) -> &ValueRef {
+        &self.0
     }
 }
 

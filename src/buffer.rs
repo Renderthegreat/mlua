@@ -163,8 +163,8 @@ impl io::Seek for BufferCursor {
 }
 
 impl HasValueRef for Buffer {
-    fn to_vref(&self) -> ValueRef {
-        self.0
+    fn to_vref(&self) -> &ValueRef {
+        &self.0
     }
 }
 

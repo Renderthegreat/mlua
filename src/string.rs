@@ -216,8 +216,8 @@ impl Hash for LuaString {
 }
 
 impl HasValueRef for LuaString {
-    fn to_vref(&self) -> ValueRef {
-        self.0
+    fn to_vref(&self) -> &ValueRef {
+        &self.0
     }
 }
 

@@ -750,8 +750,8 @@ impl IntoLua for WrappedAsyncFunction {
 }
 
 impl HasValueRef for Function {
-    fn to_vref(&self) -> ValueRef {
-        self.0
+    fn to_vref(&self) -> &ValueRef {
+        &self.0
     }
 }
 

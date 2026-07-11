@@ -253,12 +253,12 @@ pub trait ObjectLike: Sealed {
 /// A trait for types that have a [`ValueRef`].
 pub trait HasValueRef: Sized {
     /// Convert to a [`ValueRef`].
-    fn to_vref(&self) -> ValueRef;
+    fn to_vref(&self) -> &ValueRef;
 }
 
 pub trait MaybeHasValueRef: Sized {
     /// Convert compatiable types to a [`ValueRef`].
-    fn maybe_to_vref(&self) -> Option<ValueRef>;
+    fn maybe_to_vref(&self) -> Option<&ValueRef>;
 }
 
 pub(crate) trait ShortTypeName {

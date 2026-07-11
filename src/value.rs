@@ -562,26 +562,26 @@ impl Value {
 }
 
 impl MaybeHasValueRef for Value {
-    fn maybe_to_vref(&self) -> Option<ValueRef> {
+    fn maybe_to_vref(&self) -> Option<&ValueRef> {
         // Don't use the `_` pattern, as may be over looking in the future causing compatiable types to
         // return `None`.
         match self {
-            &Self::Nil => None,
-            &Self::Boolean(_) => None,
-            &Self::LightUserData(_) => None,
-            &Self::Error(_) => None,
-            &Self::Function(Function(vref)) => Some(vref),
-            &Self::Integer(_) => None,
-            &Self::Number(_) => None,
-            &Self::String(LuaString(vref)) => Some(vref),
-            &Self::Table(Table(vref)) => Some(vref),
-            &Self::Thread(Thread(vref, _)) => Some(vref),
+            Self::Nil => None,
+            Self::Boolean(_) => None,
+            Self::LightUserData(_) => None,
+            Self::Error(_) => None,
+            Self::Function(Function(vref)) => Some(vref),
+            Self::Integer(_) => None,
+            Self::Number(_) => None,
+            Self::String(LuaString(vref)) => Some(vref),
+            Self::Table(Table(vref)) => Some(vref),
+            Self::Thread(Thread(vref, _)) => Some(vref),
             #[cfg(feature = "luau")]
-            &Self::Buffer(Buffer(vref)) => Some(vref),
+            Self::Buffer(Buffer(vref)) => Some(vref),
             #[cfg(feature = "luau")]
-            &Self::Vector(_) => None,
-            &Self::UserData(AnyUserData(vref)) => Some(vref),
-            &Self::Other(vref) => Some(vref),
+            Self::Vector(_) => None,
+            Self::UserData(AnyUserData(vref)) => Some(vref),
+            Self::Other(vref) => Some(vref),
         }
     }
 }

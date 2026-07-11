@@ -1122,8 +1122,8 @@ impl AnyUserData {
 }
 
 impl HasValueRef for AnyUserData {
-    fn to_vref(&self) -> ValueRef {
-        self.0
+    fn to_vref(&self) -> &ValueRef {
+        &self.0
     }
 }
 

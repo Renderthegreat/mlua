@@ -770,8 +770,8 @@ impl fmt::Debug for Thread {
 }
 
 impl HasValueRef for Thread {
-    fn to_vref(&self) -> ValueRef {
-        self.0
+    fn to_vref(&self) -> &ValueRef {
+        &self.0
     }
 }
 
