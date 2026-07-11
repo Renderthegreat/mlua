@@ -563,6 +563,8 @@ impl Value {
 
 impl MaybeHasValueRef for Value {
     fn maybe_to_vref(&self) -> Option<&ValueRef> {
+        #[cfg(feature = "luau")]
+        use crate::buffer::Buffer;
         // Don't use the `_` pattern, as may be over looking in the future causing compatiable types to
         // return `None`.
         match self {
