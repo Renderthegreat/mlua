@@ -244,6 +244,9 @@ pub trait ObjectLike: Sealed {
 
     /// Converts the object to a Lua value.
     fn to_value(&self) -> Value;
+
+    #[doc(hidden)]
+    fn weak_lua(&self) -> &WeakLua;
 }
 
 /// A trait for types that have a [`ValueRef`].

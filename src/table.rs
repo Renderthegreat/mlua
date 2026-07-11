@@ -1219,6 +1219,11 @@ impl ObjectLike for Table {
     fn to_value(&self) -> Value {
         Value::Table(self.clone())
     }
+
+    #[inline]
+    fn weak_lua(&self) -> &WeakLua {
+        &self.0.lua
+    }
 }
 
 impl HasValueRef for Table {
